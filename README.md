@@ -7,4 +7,6 @@ https://github.com/udacity/self-driving-car-sim
 
 Please choose the version 1 download.
 
+In simualtor-linux folder, appen the executable app `simulator-linux/Default Linux desktop Universal.x86_64`
+
 After, open the simulator and choosing training mode a track one. CHoose your graphics preferences based on what your device can handle. Then create your own data folder. Once you start the simulation, click record. Choose the new data folder you just created to save all your data. And then drive around the track 3 times. After. Pause the recording and turn the car around to drive the other way. Please drive around the track 3 times in the new direction. Once done stop the recording.
