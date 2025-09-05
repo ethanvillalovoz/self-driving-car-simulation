@@ -15,3 +15,7 @@ Model Archetucutre:
 
 https://arxiv.org/abs/1604.07316
 
+
+conda create -n car python=3.10
+
+pip install -r requirements.txt
