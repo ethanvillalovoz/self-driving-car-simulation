@@ -1,4 +1,4 @@
-# Self-Driving Car Simulation
+# Self-Driving Car: Behavioral Cloning in the Udacity Simulator
 
 [![Python](https://img.shields.io/badge/python-3.10-blue.svg)](https://www.python.org/downloads/release/python-3100/)
 [![TensorFlow](https://img.shields.io/badge/TensorFlow-2.8%2B-orange.svg)](https://www.tensorflow.org/)
