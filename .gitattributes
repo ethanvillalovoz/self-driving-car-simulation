@@ -1,0 +1,11 @@
+*.csv text eol=lf
+*.ipynb text eol=lf
+*.md text eol=lf
+*.py text eol=lf
+*.txt text eol=lf
+*.yml text eol=lf
+
+*.h5 binary
+*.jpg binary
+*.png binary
+simulator-linux/** binary
