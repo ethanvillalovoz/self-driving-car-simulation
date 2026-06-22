@@ -19,9 +19,9 @@ The release contains:
 ## Artifact Checksums
 
 ```text
-77fa26f38499fe3e8e47cdd67be831720a1b836d24545de8f2fe54b80e1a02eb  self-driving-car-model-v1.tar.gz
-dbf05e94f21bbfcbf1c5066a9e199aebc6bc843df77886b7284afe6509f61e16  self-driving-car-data-v1.tar.gz
-b3b8cbef851bee3f8529a3bc4870fbb20de23741fdc3b700bb328c45e69ef1d2  self-driving-car-simulator-linux-v1.tar.gz
+a4a551864792d24c78af9b31efcea1173207787bd72c939325a4c3795d0fc483  self-driving-car-model-v1.tar.gz
+5ebb75a78a11ca35f05b285674240e5f42f534c9094b183f80fa58a38162f845  self-driving-car-data-v1.tar.gz
+d8e5d79e7757e8cea4e26cfd6287313cdbdd108a3a972d6e88f0723e5cd2baa8  self-driving-car-simulator-linux-v1.tar.gz
 ```
 
 The repository itself keeps:
