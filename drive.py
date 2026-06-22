@@ -96,6 +96,12 @@ def main():
     import eventlet
     from keras.models import load_model
 
+    if not MODEL_PATH.exists():
+        raise FileNotFoundError(
+            f"Missing {MODEL_PATH}. Run "
+            "`python scripts/download_artifacts.py --model` first."
+        )
+
     app = create_app(load_model(MODEL_PATH, compile=False))
     eventlet.wsgi.server(eventlet.listen(("", SIMULATOR_PORT)), app)
 

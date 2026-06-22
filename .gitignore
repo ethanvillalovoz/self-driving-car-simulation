@@ -207,9 +207,13 @@ cython_debug/
 marimo/_static/
 marimo/_lsp/
 __marimo__/
-data/IMG.zip
 
-# Generated training artifacts
+# Downloaded release artifacts and generated training outputs
+data/
+model/
+simulator-linux/
+*.tar.gz
+data/IMG.zip
 *.keras
 *.ckpt
 *.weights.h5

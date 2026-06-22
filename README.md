@@ -28,12 +28,10 @@ The notebook trains a steering-angle predictor from simulator images and saves t
 
 ```text
 self-driving-car-simulation/
-├── data/                         # Driving log and simulator camera frames
 ├── docs/                         # Screenshots, loss curve, artifact notes
-├── model/model.h5                # Trained Keras behavioral cloning model
 ├── notebooks/behavioral_cloning.ipynb
 │                                  # Data processing, training, and evaluation
-├── simulator-linux/              # Linux Udacity simulator build
+├── scripts/download_artifacts.py # Restores release-hosted model/data/simulator
 ├── tests/                        # Lightweight unit tests for inference logic
 ├── drive.py                      # Real-time simulator inference server
 ├── requirements.txt              # Full training/inference dependencies
@@ -68,7 +66,23 @@ pip install -r requirements-dev.txt
 pytest
 ```
 
-### 3. Train Or Inspect The Model
+### 3. Download The Artifacts
+
+The trained model, training data, and Linux simulator are hosted as GitHub Release assets so the repository stays lightweight.
+
+Download only the trained model needed for autonomous mode:
+
+```bash
+python scripts/download_artifacts.py --model
+```
+
+Download everything needed to retrain and run the Linux simulator:
+
+```bash
+python scripts/download_artifacts.py --all
+```
+
+### 4. Train Or Inspect The Model
 
 Open and run the notebook:
 
@@ -78,7 +92,7 @@ jupyter notebook notebooks/behavioral_cloning.ipynb
 
 The notebook loads `data/driving_log.csv`, preprocesses the images in `data/IMG/`, trains the CNN, and writes the model to `model/model.h5`.
 
-### 4. Run Autonomous Mode
+### 5. Run Autonomous Mode
 
 Start the inference server:
 
@@ -125,7 +139,7 @@ The full notebook training run is intentionally not executed in CI because it re
 - Flask, python-socketio, eventlet
 - Udacity self-driving car simulator
 
-The repository includes a Linux simulator build in `simulator-linux/`. macOS and Windows users should download the matching simulator release from the [Udacity simulator repository](https://github.com/udacity/self-driving-car-sim).
+The GitHub Release includes the trained model, training data, and a Linux simulator build. macOS and Windows users should download the matching simulator release from the [Udacity simulator repository](https://github.com/udacity/self-driving-car-sim).
 
 ## Roadmap
 

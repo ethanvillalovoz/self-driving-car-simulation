@@ -8,4 +8,4 @@
 *.h5 binary
 *.jpg binary
 *.png binary
-simulator-linux/** binary
+*.tar.gz binary
