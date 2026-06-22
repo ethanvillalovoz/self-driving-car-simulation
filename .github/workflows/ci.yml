@@ -26,9 +26,9 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements-dev.txt
 
-      - name: Compile Python entrypoint
+      - name: Compile Python entrypoints
         run: |
-          python -m py_compile drive.py
+          python -m py_compile drive.py scripts/create_demo_preview.py scripts/download_artifacts.py
 
       - name: Run unit tests
         run: |

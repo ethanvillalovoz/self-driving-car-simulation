@@ -6,6 +6,7 @@
 *.yml text eol=lf
 
 *.h5 binary
+*.gif binary
 *.jpg binary
 *.png binary
 *.tar.gz binary

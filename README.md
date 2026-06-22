@@ -7,7 +7,9 @@
 
 Behavioral cloning pipeline for autonomous driving in the Udacity self-driving car simulator. The project trains an NVIDIA-style convolutional neural network on simulator camera frames, then serves the trained Keras model through a real-time Socket.IO inference server that predicts steering commands from live simulator telemetry.
 
-![Simulator Screenshot](docs/simulator_screenshot.png)
+![Behavioral cloning preview](docs/demo-preview.gif)
+
+The preview above is generated from a simulator frame and summarizes the inference loop. For the full visual context, see the [simulator screenshot](docs/simulator_screenshot.png).
 
 ## What This Project Demonstrates
 
@@ -31,6 +33,8 @@ self-driving-car-simulation/
 ├── docs/                         # Screenshots, loss curve, artifact notes
 ├── notebooks/behavioral_cloning.ipynb
 │                                  # Data processing, training, and evaluation
+├── scripts/create_demo_preview.py
+│                                  # Generates the README preview GIF
 ├── scripts/download_artifacts.py # Restores release-hosted model/data/simulator
 ├── tests/                        # Lightweight unit tests for inference logic
 ├── drive.py                      # Real-time simulator inference server
