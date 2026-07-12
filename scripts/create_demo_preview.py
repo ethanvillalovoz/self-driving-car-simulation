@@ -1,158 +1,113 @@
-"""Generate the README demo preview GIF from the simulator screenshot."""
+"""Generate a lightweight simulator-motion preview for the README."""
 
 from __future__ import annotations
 
+import math
 from pathlib import Path
 
-from PIL import Image, ImageDraw, ImageFont
-
+from PIL import Image, ImageDraw, ImageEnhance, ImageFont
 
 ROOT = Path(__file__).resolve().parents[1]
-SOURCE = ROOT / "docs" / "simulator_screenshot.png"
-OUTPUT = ROOT / "docs" / "demo-preview.gif"
-FRAME_SIZE = (840, 636)
+SOURCE = ROOT / "docs" / "simulator-frame.webp"
+OUTPUT = ROOT / "docs" / "demo-preview.webp"
+FRAME_SIZE = (880, 495)
+FRAME_COUNT = 24
 
 
-def load_font(size: int, bold: bool = False) -> ImageFont.FreeTypeFont:
-    candidates = [
-        "/System/Library/Fonts/Supplemental/Arial Bold.ttf" if bold else "",
-        "/System/Library/Fonts/Supplemental/Arial.ttf",
-        "/Library/Fonts/Arial.ttf",
+def load_font(size: int, *, bold: bool = False) -> ImageFont.FreeTypeFont:
+    names = [
+        "/System/Library/Fonts/SFNS.ttf",
         "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf" if bold else "",
         "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
     ]
-    for candidate in candidates:
-        if candidate and Path(candidate).exists():
-            return ImageFont.truetype(candidate, size)
+    for name in names:
+        if name and Path(name).exists():
+            return ImageFont.truetype(name, size)
     return ImageFont.load_default()
 
 
-TITLE_FONT = load_font(30, bold=True)
-BODY_FONT = load_font(20)
-SMALL_FONT = load_font(17)
+LABEL = load_font(13, bold=True)
+VALUE = load_font(23, bold=True)
+SMALL = load_font(13)
 
 
-def base_frame() -> Image.Image:
-    image = Image.open(SOURCE).convert("RGB")
-    image.thumbnail(FRAME_SIZE, Image.Resampling.LANCZOS)
+def motion_frame(source: Image.Image, phase: float) -> Image.Image:
+    width, height = source.size
+    target_ratio = FRAME_SIZE[0] / FRAME_SIZE[1]
+    crop_height = min(height, int(width / target_ratio))
+    crop_width = int(crop_height * target_ratio)
+    zoom = 1.0 + 0.035 * (0.5 - 0.5 * math.cos(phase * math.tau))
+    visible_width = int(crop_width / zoom)
+    visible_height = int(crop_height / zoom)
+    center_x = width // 2 + int(12 * math.sin(phase * math.tau))
+    center_y = height // 2 + int(8 * math.sin(phase * math.tau + 0.8))
+    left = max(0, min(width - visible_width, center_x - visible_width // 2))
+    top = max(0, min(height - visible_height, center_y - visible_height // 2))
+    frame = source.crop((left, top, left + visible_width, top + visible_height))
+    frame = frame.resize(FRAME_SIZE, Image.Resampling.LANCZOS).convert("RGBA")
+    frame = ImageEnhance.Contrast(frame).enhance(1.04)
 
-    frame = Image.new("RGB", FRAME_SIZE, (12, 16, 22))
-    x = (FRAME_SIZE[0] - image.width) // 2
-    y = (FRAME_SIZE[1] - image.height) // 2
-    frame.paste(image, (x, y))
-
-    overlay = Image.new("RGBA", FRAME_SIZE, (0, 0, 0, 0))
-    draw = ImageDraw.Draw(overlay)
-    draw.rectangle((0, 0, FRAME_SIZE[0], FRAME_SIZE[1]), fill=(0, 0, 0, 42))
-    return Image.alpha_composite(frame.convert("RGBA"), overlay)
+    shade = Image.new("RGBA", FRAME_SIZE, (0, 0, 0, 0))
+    shade_draw = ImageDraw.Draw(shade)
+    shade_draw.rectangle((0, 0, FRAME_SIZE[0], 86), fill=(5, 8, 10, 72))
+    shade_draw.rectangle((0, 382, FRAME_SIZE[0], FRAME_SIZE[1]), fill=(5, 8, 10, 94))
+    return Image.alpha_composite(frame, shade)
 
 
-def panel(
-    frame: Image.Image,
-    title: str,
-    lines: list[str],
-    box: tuple[int, int, int, int] = (28, 28, 585, 168),
-) -> Image.Image:
+def draw_hud(frame: Image.Image, phase: float) -> None:
     draw = ImageDraw.Draw(frame)
-    draw.rounded_rectangle(box, radius=18, fill=(8, 16, 28, 222))
-    draw.rounded_rectangle(box, radius=18, outline=(95, 168, 255, 230), width=2)
-    draw.text((box[0] + 22, box[1] + 18), title, fill=(255, 255, 255), font=TITLE_FONT)
-    y = box[1] + 62
-    for line in lines:
-        draw.text((box[0] + 24, y), line, fill=(216, 228, 243), font=BODY_FONT)
-        y += 28
-    return frame
+    steering = -0.12 + 0.18 * (0.5 - 0.5 * math.cos(phase * math.tau))
+    speed = 9.1 + 0.7 * math.sin(phase * math.tau)
+    throttle = max(0.0, 1.0 - speed / 10.0)
 
+    draw.rounded_rectangle((24, 22, 324, 80), radius=8, fill=(10, 14, 17, 218))
+    draw.text((42, 34), "BEHAVIORAL CLONING", fill=(245, 247, 248), font=LABEL)
+    draw.ellipse((284, 39, 294, 49), fill=(99, 211, 148))
+    draw.text((300, 34), "LIVE", fill=(194, 205, 211), font=SMALL)
 
-def callout(
-    frame: Image.Image,
-    text: str,
-    xy: tuple[int, int],
-    anchor: tuple[int, int],
-    color: tuple[int, int, int] = (49, 130, 206),
-) -> Image.Image:
-    draw = ImageDraw.Draw(frame)
-    width = draw.textlength(text, font=SMALL_FONT) + 30
-    box = (xy[0], xy[1], xy[0] + int(width), xy[1] + 42)
-    draw.rounded_rectangle(box, radius=14, fill=(8, 16, 28, 232))
-    draw.rounded_rectangle(box, radius=14, outline=color + (245,), width=2)
-    draw.text((xy[0] + 15, xy[1] + 11), text, fill=(255, 255, 255), font=SMALL_FONT)
-    draw.line((box[2] - 16, box[3] - 4, anchor[0], anchor[1]), fill=color + (245,), width=4)
-    return frame
+    draw.rounded_rectangle((24, 398, 856, 471), radius=8, fill=(10, 14, 17, 226))
+    metrics = [
+        (42, "STEERING", f"{steering:+.3f}"),
+        (194, "SPEED", f"{speed:.1f} mph"),
+        (346, "THROTTLE", f"{throttle:.3f}"),
+    ]
+    for x, label, value in metrics:
+        draw.text((x, 410), label, fill=(154, 169, 177), font=LABEL)
+        draw.text((x, 433), value, fill=(247, 249, 250), font=VALUE)
 
-
-def highlight(frame: Image.Image, box: tuple[int, int, int, int]) -> Image.Image:
-    draw = ImageDraw.Draw(frame)
-    draw.rounded_rectangle(box, radius=16, outline=(255, 209, 102, 250), width=5)
-    return frame
+    stages = ["CAMERA", "YUV 200x66", "CNN", "CONTROL"]
+    active = min(len(stages) - 1, int(phase * len(stages)))
+    start_x = 510
+    for index, stage in enumerate(stages):
+        x = start_x + index * 88
+        color = (103, 208, 153) if index <= active else (126, 139, 146)
+        draw.ellipse((x, 420, x + 8, 428), fill=color)
+        draw.text((x, 439), stage, fill=color, font=SMALL, anchor="ma")
+        if index < len(stages) - 1:
+            draw.line((x + 13, 424, x + 75, 424), fill=(91, 105, 112), width=1)
 
 
 def make_frames() -> list[Image.Image]:
-    frames: list[Image.Image] = []
-
-    frame = base_frame()
-    frames.append(
-        panel(
-            frame,
-            "Self-Driving Car Simulation",
-            ["Behavioral cloning with a CNN", "Real-time Socket.IO control loop"],
-        )
-    )
-
-    frame = base_frame()
-    highlight(frame, (96, 140, 740, 460))
-    callout(frame, "center-camera telemetry", (52, 496), (338, 408))
-    frames.append(
-        panel(
-            frame,
-            "1. Simulator Frame",
-            ["Live camera image arrives from the simulator"],
-        )
-    )
-
-    frame = base_frame()
-    highlight(frame, (96, 207, 740, 390))
-    callout(frame, "crop -> YUV -> resize", (62, 482), (395, 332))
-    frames.append(
-        panel(
-            frame,
-            "2. Image Preprocessing",
-            ["The frame is transformed into model-ready input"],
-        )
-    )
-
-    frame = base_frame()
-    callout(frame, "NVIDIA-style CNN predicts steering", (386, 476), (512, 320), (111, 207, 151))
-    frames.append(
-        panel(
-            frame,
-            "3. Model Inference",
-            ["Keras model predicts steering angle from vision"],
-        )
-    )
-
-    frame = base_frame()
-    callout(frame, "steering + throttle returned", (438, 494), (630, 382), (237, 137, 54))
-    frames.append(
-        panel(
-            frame,
-            "4. Autonomous Control",
-            ["The server sends commands back to the simulator"],
-        )
-    )
-
+    source = Image.open(SOURCE).convert("RGB")
+    frames = []
+    for index in range(FRAME_COUNT):
+        phase = index / FRAME_COUNT
+        frame = motion_frame(source, phase)
+        draw_hud(frame, phase)
+        frames.append(frame.convert("RGB"))
     return frames
 
 
 def main() -> None:
-    frames = [frame.convert("P", palette=Image.Palette.ADAPTIVE, colors=96) for frame in make_frames()]
+    frames = make_frames()
     frames[0].save(
         OUTPUT,
         save_all=True,
         append_images=frames[1:],
-        duration=[1100, 1200, 1200, 1200, 1400],
+        duration=105,
         loop=0,
-        optimize=True,
+        quality=64,
+        method=6,
     )
     print(f"Wrote {OUTPUT.relative_to(ROOT)}")
 

@@ -1,17 +1,21 @@
 ---
-name: "✨ Feature Request"
-about: Suggest an idea for this project
+name: Improvement proposal
+about: Propose a scoped change to the model, evaluation, simulator, or tooling
 labels: enhancement
 ---
 
-**Is your feature request related to a problem? Please describe.**
-A clear and concise description of what the problem is. Ex: I'm always frustrated when [...]
+## Problem
 
-**Describe the solution you'd like**
-A clear and concise description of what you want to happen.
+What limitation or research question does this address?
 
-**Describe alternatives you've considered**
-A clear and concise description of any alternative solutions or features you've considered.
+## Proposed Change
 
-**Additional context**
-Add any other context or screenshots about the feature request here.
+Describe the smallest useful implementation and its public API or artifact impact.
+
+## Evidence
+
+How should the change be evaluated? For behavior claims, specify the simulator build, track, run count, metrics, and failure reporting.
+
+## Alternatives
+
+What simpler approaches or existing tools did you consider?

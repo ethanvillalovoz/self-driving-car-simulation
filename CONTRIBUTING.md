@@ -1,55 +1,34 @@
 # Contributing
 
-Thanks for helping improve Self-Driving Car Simulation. This repository contains a behavioral cloning demo with bundled data, model, and simulator artifacts, so changes should preserve reproducibility and avoid committing unnecessary generated files.
+Thanks for improving Self-Driving Car Simulation. Keep changes reproducible, narrowly scoped, and honest about what was measured.
 
-## Development Setup
-
-For lightweight code checks:
+## Setup
 
 ```bash
-python -m venv .venv
+python3 -m venv .venv
 source .venv/bin/activate
-python -m pip install --upgrade pip
-pip install -r requirements-dev.txt
+pip install -e ".[dev]"
 ```
 
-For full notebook training or simulator inference, use the full dependency set:
+Install `.[training]` or `.[simulator]` only when working on those paths.
+
+## Before A Pull Request
 
 ```bash
-conda create -n self-driving-car python=3.10 -y
-conda activate self-driving-car
-pip install -r requirements.txt
+ruff check src tests scripts drive.py
+ruff format --check src tests scripts drive.py
+pytest -q
+python -m json.tool notebooks/behavioral_cloning.ipynb >/dev/null
 ```
 
-## Verification
+- Add tests for changed preprocessing, telemetry, control, data, or extraction behavior.
+- Never commit downloaded datasets, simulator builds, model checkpoints, or secrets.
+- Update the model card when intended use, data assumptions, or limitations change.
+- Include exact evaluation commands and distinguish notebook observations from new results.
+- Regenerate `docs/demo-preview.webp` when its source or script changes.
 
-Run these checks before opening a pull request:
+## Research Claims
 
-```bash
-python -m py_compile drive.py
-pytest
-python -m json.tool notebooks/behavioral_cloning.ipynb > /tmp/behavioral_cloning.ipynb
-```
+Do not describe validation MSE as autonomous-driving success. Closed-loop claims need a documented track, simulator version, number of runs, intervention definition, and aggregate results.
 
-If your change affects training behavior, also rerun the notebook and include the resulting loss/behavior notes in the pull request.
-
-## Contribution Guidelines
-
-- Keep core model behavior and simulator protocol changes small and well explained.
-- Do not commit local virtual environments, notebook checkpoints, alternate model checkpoints, or regenerated datasets unless they are intentionally promoted as public artifacts.
-- Add or update tests for preprocessing, telemetry, or control logic changes.
-- Update the README or docs when setup, commands, artifact paths, or simulator assumptions change.
-- Preserve the existing trained model and dataset paths unless the migration is intentional and documented.
-
-## Pull Requests
-
-Please include:
-
-- A short summary of the change.
-- The affected area: data, notebook, inference server, model artifact, simulator, docs, or CI.
-- Commands used to verify the change.
-- Notes about any remaining limitations or follow-up work.
-
-## Conduct
-
-Be respectful, constructive, and specific when discussing changes or issues.
+By participating, you agree to the [Code of Conduct](CODE_OF_CONDUCT.md).

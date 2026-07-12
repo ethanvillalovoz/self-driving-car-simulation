@@ -1,0 +1,15 @@
+{
+  "source": "Text outputs extracted from the original committed notebook before output cleanup",
+  "model_parameters": 252219,
+  "epochs": 10,
+  "training_time_seconds": 789.0967078208923,
+  "best_epoch": 4,
+  "best_validation_mse": 0.07077250629663467,
+  "final_training_mse": 0.07316208630800247,
+  "final_validation_mse": 0.07081665843725204,
+  "caveats": [
+    "The original notebook did not pin every random source.",
+    "Hardware and complete package versions were not recorded.",
+    "Offline MSE is not a closed-loop driving metric."
+  ]
+}

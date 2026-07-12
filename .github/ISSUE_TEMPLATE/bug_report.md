@@ -1,29 +1,25 @@
 ---
-name: "🐛 Bug Report"
-about: Report a bug to help us improve
+name: Bug report
+about: Report a reproducible problem in training, inference, artifacts, or docs
 labels: bug
 ---
 
-**Describe the bug**
-A clear and concise description of what the bug is.
+## Problem
 
-**To Reproduce**
-Steps to reproduce the behavior:
-1. Go to '...'
-2. Click on '...'
-3. Scroll down to '...'
-4. See error
+Describe what happened and what you expected.
 
-**Expected behavior**
-A clear and concise description of what you expected to happen.
+## Reproduction
 
-**Screenshots**
-If applicable, add screenshots to help explain your problem.
+Provide the smallest command, telemetry payload, or code sample that reproduces the issue. Include the complete traceback or log excerpt.
 
-**Environment (please complete the following information):**
-- OS: [e.g. macOS, Windows, Linux]
-- Browser [e.g. Chrome, Safari]
-- Python version [e.g. 3.10]
+## Environment
 
-**Additional context**
-Add any other context about the problem here.
+- OS and architecture:
+- Python version:
+- Installed extras (`dev`, `training`, `simulator`):
+- Simulator build and track, if relevant:
+- Model/data release tag and checksum, if relevant:
+
+## Verification
+
+List any checks you already ran and whether the issue reproduces from a clean clone.

@@ -3,37 +3,43 @@ name: CI
 on:
   workflow_dispatch:
   push:
-    branches: [ main ]
+    branches: [main]
   pull_request:
-    branches: [ main ]
+    branches: [main]
+
+permissions:
+  contents: read
 
 jobs:
-  test:
+  verify:
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11", "3.13"]
     runs-on: ubuntu-latest
-    env:
-      PYTHONPATH: .
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
+      - uses: actions/setup-python@v5
         with:
-          python-version: '3.10'
+          python-version: ${{ matrix.python-version }}
+          cache: pip
 
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements-dev.txt
+      - name: Install package
+        run: python -m pip install -e ".[dev]"
 
-      - name: Compile Python entrypoints
+      - name: Lint
         run: |
-          python -m py_compile drive.py scripts/create_demo_preview.py scripts/download_artifacts.py
+          ruff check src tests scripts drive.py
+          ruff format --check src tests scripts drive.py
 
-      - name: Run unit tests
-        run: |
-          pytest
+      - name: Test
+        run: pytest -q
 
-      - name: Validate notebook JSON
+      - name: Validate commands and notebook
         run: |
-          python -m json.tool notebooks/behavioral_cloning.ipynb > /tmp/behavioral_cloning.ipynb
+          python -m behavioral_cloning --help
+          self-driving-artifacts --help
+          self-driving-train --help
+          python -m json.tool notebooks/behavioral_cloning.ipynb >/dev/null
+          python -m json.tool examples/original-run-metrics.json >/dev/null
