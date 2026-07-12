@@ -1,166 +1,138 @@
 # Self-Driving Car Simulation
 
 [![CI](https://github.com/ethanvillalovoz/self-driving-car-simulation/actions/workflows/ci.yml/badge.svg)](https://github.com/ethanvillalovoz/self-driving-car-simulation/actions/workflows/ci.yml)
-[![Python](https://img.shields.io/badge/python-3.10-blue.svg)](https://www.python.org/)
-[![TensorFlow](https://img.shields.io/badge/TensorFlow-2.8%2B-orange.svg)](https://www.tensorflow.org/)
-[![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
+[![Python](https://img.shields.io/badge/Python-3.11%2B-222222.svg)](https://www.python.org/)
+[![License](https://img.shields.io/badge/license-MIT-222222.svg)](LICENSE)
 
-Behavioral cloning pipeline for autonomous driving in the Udacity self-driving car simulator. The project trains an NVIDIA-style convolutional neural network on simulator camera frames, then serves the trained Keras model through a real-time Socket.IO inference server that predicts steering commands from live simulator telemetry.
+A reproducible behavioral-cloning pipeline for the Udacity driving simulator. It trains an NVIDIA-style convolutional network on center and side camera telemetry, then serves bounded steering and throttle commands through the simulator's legacy Socket.IO protocol.
 
-![Behavioral cloning preview](docs/demo-preview.gif)
+![Behavioral-cloning model driving in the simulator](docs/demo-preview.webp)
 
-The preview above is generated from a simulator frame and summarizes the inference loop. For the full visual context, see the [simulator screenshot](docs/simulator_screenshot.png).
+The motion and telemetry overlay are an illustrative README preview generated from the recorded simulator frame; they are not a logged evaluation run.
 
-## What This Project Demonstrates
-
-- Collected simulator telemetry with center, left, and right camera images.
-- Balanced steering-angle data to reduce straight-driving bias.
-- Applied image augmentation and preprocessing for robust visual learning.
-- Trained a convolutional neural network inspired by NVIDIA's end-to-end driving architecture.
-- Saved a trained Keras model and used it in autonomous simulator mode.
-- Refactored the inference path into testable preprocessing and control functions.
-
-## Results
-
-The notebook trains a steering-angle predictor from simulator images and saves the trained model to `model/model.h5`. The loss curve below shows the model converging during training.
-
-![Training Loss Curve](docs/loss_curve.png)
-
-## Project Structure
+## System At A Glance
 
 ```text
-self-driving-car-simulation/
-├── docs/                         # Screenshots, loss curve, artifact notes
-├── notebooks/behavioral_cloning.ipynb
-│                                  # Data processing, training, and evaluation
-├── scripts/create_demo_preview.py
-│                                  # Generates the README preview GIF
-├── scripts/download_artifacts.py # Restores release-hosted model/data/simulator
-├── tests/                        # Lightweight unit tests for inference logic
-├── drive.py                      # Real-time simulator inference server
-├── requirements.txt              # Full training/inference dependencies
-└── requirements-dev.txt          # Lightweight CI/test dependencies
+driving_log.csv + camera frames
+        |
+        v
+balance steering -> expand side cameras -> deterministic split -> augment
+        |                                                        |
+        +----------------> NVIDIA-style CNN <---------------------+
+                                      |
+                                      v
+simulator frame -> crop/YUV/blur/resize -> steering -> bounded control command
 ```
 
-See [docs/data-and-artifacts.md](docs/data-and-artifacts.md) for details on the included dataset, trained model, and simulator artifacts.
+| Evidence | Recorded value |
+| --- | ---: |
+| Model size | 252,219 trainable parameters |
+| Input tensor | `66 x 200 x 3` YUV |
+| Original run | 10 epochs, historical notebook workflow |
+| Best recorded validation MSE | `0.07077` at epoch 4 |
+| Runtime target | Udacity simulator on port `4567` |
+
+The loss value comes from the committed historical notebook output. It is evidence that the training path ran, not a lane-keeping benchmark. No track-completion rate, intervention count, recovery metric, or real-world driving result was recorded, so this repository does not claim one.
+
+The exact extracted values are preserved in [`examples/original-run-metrics.json`](examples/original-run-metrics.json).
+
+## What Changed In 1.1
+
+- Moved preprocessing, control, training, downloads, and serving into an installable `src/` package.
+- Added deterministic balancing and train/validation splits with an explicit seed.
+- Bounded image payloads, steering, and throttle; malformed telemetry fails to a neutral command.
+- Corrected Socket.IO responses to target the connected simulator session.
+- Added SHA-256 verification and link-safe extraction for every release artifact.
+- Preserved the original notebook as an exploratory record while making scripts authoritative.
+- Added focused tests for image handling, control safety, data preparation, and archive extraction.
 
 ## Quick Start
 
-### 1. Clone The Repository
+### Verify The Core
 
 ```bash
 git clone https://github.com/ethanvillalovoz/self-driving-car-simulation.git
 cd self-driving-car-simulation
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -e ".[dev]"
+ruff check src tests scripts drive.py
+pytest -q
 ```
 
-### 2. Create The Python Environment
+### Run Autonomous Mode
 
-Conda is recommended because TensorFlow, OpenCV, and simulator tooling can be sensitive to Python versions.
+The pinned Socket.IO versions preserve compatibility with the older simulator client.
 
 ```bash
-conda create -n self-driving-car python=3.10 -y
-conda activate self-driving-car
-pip install -r requirements.txt
+pip install -e ".[simulator]"
+self-driving-artifacts --model
+self-driving-drive --model model/model.h5
 ```
 
-For CI-style unit tests only, install the lightweight dependency set:
+Open the Udacity simulator, choose **Autonomous Mode**, and connect to `127.0.0.1:4567`. Use `--host 0.0.0.0` only when a remote simulator genuinely needs access.
+
+### Reproduce Training
 
 ```bash
-pip install -r requirements-dev.txt
-pytest
+pip install -e ".[training]"
+self-driving-artifacts --data
+self-driving-train --data-dir data --output model/model.keras --seed 42
 ```
 
-### 3. Download The Artifacts
+The trainer writes the model and a neighboring `.history.json` file containing the configuration and loss trace. The exploratory [notebook](notebooks/behavioral_cloning.ipynb) documents the original run; the package is the maintained execution path.
 
-The trained model, training data, and Linux simulator are hosted as GitHub Release assets so the repository stays lightweight.
+## Runtime Contract
 
-Download only the trained model needed for autonomous mode:
+For each telemetry event, the server:
 
-```bash
-python scripts/download_artifacts.py --model
+1. validates and decodes a bounded base64 RGB frame;
+2. crops sky and hood pixels, converts RGB to YUV, blurs, resizes, and normalizes;
+3. predicts one finite steering value and clamps it to the configured range;
+4. computes the original proportional throttle rule and clamps it to `[0, 1]`;
+5. sends the command only to the originating simulator session.
+
+Any malformed frame, missing field, non-finite model output, or invalid speed produces a logged rejection and a neutral `steering=0, throttle=0` command.
+
+## Repository Map
+
+```text
+src/behavioral_cloning/
+  artifacts.py       verified release downloads and safe extraction
+  preprocessing.py   shared camera decoding and CNN preprocessing
+  control.py         typed, bounded control prediction
+  server.py          legacy-compatible Socket.IO adapter
+  training.py        deterministic data preparation and model training
+  cli.py             simulator server command
+notebooks/           original exploratory training record
+tests/               core regression and safety checks
+docs/                model card, reproducibility notes, and visuals
 ```
 
-Download everything needed to retrain and run the Linux simulator:
+## Artifacts
 
-```bash
-python scripts/download_artifacts.py --all
-```
+The model, driving data, and Linux simulator are versioned as GitHub Release assets rather than committed to Git. `self-driving-artifacts` verifies their documented SHA-256 digest before extracting only regular files and directories.
 
-### 4. Train Or Inspect The Model
+- [Data and artifact manifest](docs/data-and-artifacts.md)
+- [Model card](docs/model-card.md)
+- [Reproducibility notes](docs/reproducibility.md)
+- [NVIDIA end-to-end driving paper](https://arxiv.org/abs/1604.07316)
+- [Udacity simulator](https://github.com/udacity/self-driving-car-sim)
 
-Open and run the notebook:
+## Limitations
 
-```bash
-jupyter notebook notebooks/behavioral_cloning.ipynb
-```
+- Simulator-only behavior, trained on one collected telemetry distribution.
+- Camera-only steering with a fixed throttle controller and no temporal state.
+- Random augmentation is a proxy for variation, not a substitute for diverse driving data.
+- Offline validation MSE does not measure closed-loop stability or recovery behavior.
+- The simulator integration depends on an intentionally old Socket.IO protocol pair.
 
-The notebook loads `data/driving_log.csv`, preprocesses the images in `data/IMG/`, trains the CNN, and writes the model to `model/model.h5`.
-
-### 5. Run Autonomous Mode
-
-Start the inference server:
-
-```bash
-python drive.py
-```
-
-Then open the Udacity simulator, select **Autonomous Mode**, and connect to the server on port `4567`.
-
-## Inference Pipeline
-
-`drive.py` performs the runtime loop:
-
-1. Receives telemetry from the simulator through Socket.IO.
-2. Decodes the base64 center-camera image.
-3. Crops sky/hood pixels, converts RGB to YUV, blurs, resizes to `200x66`, and normalizes pixels.
-4. Runs the trained Keras model to predict steering.
-5. Applies the original proportional throttle controller: `1.0 - speed / speed_limit`.
-6. Emits steering and throttle commands back to the simulator.
-
-## Verification
-
-Run local checks:
-
-```bash
-python -m py_compile drive.py
-pytest
-```
-
-The GitHub Actions workflow runs these checks on every push and pull request:
-
-- Python syntax compilation for `drive.py`
-- Unit tests for image preprocessing, telemetry decoding, and control prediction
-- Notebook JSON validation
-
-The full notebook training run is intentionally not executed in CI because it requires heavier TensorFlow/GPU resources and simulator data artifacts.
-
-## Requirements
-
-- Python 3.10
-- TensorFlow/Keras
-- OpenCV
-- NumPy, Pandas, scikit-learn, Matplotlib
-- Flask, python-socketio, eventlet
-- Udacity self-driving car simulator
-
-The GitHub Release includes the trained model, training data, and a Linux simulator build. macOS and Windows users should download the matching simulator release from the [Udacity simulator repository](https://github.com/udacity/self-driving-car-sim).
-
-## Roadmap
-
-- Add a small scripted training entrypoint alongside the notebook.
-- Add evaluation metrics for lane recovery and track completion.
-- Support separate train/eval data splits across multiple simulator tracks.
-- Add optional model export to the modern `.keras` format.
-
-## References
-
-- [NVIDIA End to End Learning for Self-Driving Cars](https://arxiv.org/abs/1604.07316)
-- [Udacity Self-Driving Car Simulator](https://github.com/udacity/self-driving-car-sim)
+This is a rigorous educational reference, not a safety-certified autonomous-driving system.
 
 ## Contributing
 
-Contributions are welcome. Please read [CONTRIBUTING.md](CONTRIBUTING.md) before opening an issue or pull request.
+Read [CONTRIBUTING.md](CONTRIBUTING.md) before proposing changes. Security reports should follow [SECURITY.md](SECURITY.md).
 
 ## License
 
-This project is licensed under the [MIT License](LICENSE).
+Released under the [MIT License](LICENSE).

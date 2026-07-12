@@ -1,28 +1,23 @@
-# Pull Request
+## Summary
 
-Thank you for your contribution! Please fill out the following checklist and provide details about your changes.
+What changes, and why?
 
-## Description
+## Scope
 
-<!-- Please include a summary of the change and which issue is fixed. Also include relevant motivation and context. -->
+- Affected path: training / inference / simulator / artifacts / docs
+- Public API or artifact changes:
+- Related issue:
 
-Fixes #(issue)
+## Evidence
 
-## Type of change
-- [ ] Bug fix
-- [ ] New feature
-- [ ] Documentation update
-- [ ] Other (please describe):
+List exact verification commands and results. If this changes model behavior, include the evaluation protocol and every relevant failure, not only a successful clip.
 
 ## Checklist
-- [ ] My code follows the project style guidelines
-- [ ] I have performed a self-review of my code
-- [ ] I have commented my code, particularly in hard-to-understand areas
-- [ ] I have made corresponding changes to the documentation (if relevant)
-- [ ] My changes generate no new warnings
-- [ ] I have added tests that prove my fix is effective or that my feature works (if applicable)
-- [ ] New and existing tests pass locally with my changes
 
-## Additional context
-
-<!-- Add any other context about the PR here. -->
+- [ ] `ruff check src tests scripts drive.py`
+- [ ] `ruff format --check src tests scripts drive.py`
+- [ ] `pytest -q`
+- [ ] Notebook and JSON artifacts still parse
+- [ ] Tests cover the changed behavior
+- [ ] Documentation and model limitations are current
+- [ ] No datasets, checkpoints, simulator binaries, or credentials are committed
