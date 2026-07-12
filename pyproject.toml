@@ -31,7 +31,7 @@ simulator = [
   "eventlet>=0.36,<0.41",
   "Flask>=3,<4",
   "python-engineio==3.13.2",
-  "python-socketio==4.6.1",
+  "python-socketio==5.16.2",
   "tensorflow>=2.16,<2.20",
 ]
 training = [
