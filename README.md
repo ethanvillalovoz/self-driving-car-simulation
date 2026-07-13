@@ -6,9 +6,9 @@
 
 A reproducible behavioral-cloning pipeline for the Udacity driving simulator. It trains an NVIDIA-style convolutional network on center and side camera telemetry, then serves bounded steering and throttle commands through the simulator's legacy Socket.IO protocol.
 
-![Behavioral-cloning model driving in the simulator](docs/demo-preview.webp)
+[![Offline replay of restored simulator frames, model input, and steering predictions](docs/media/self-driving-offline-replay.webp)](docs/media/self-driving-offline-replay.mp4)
 
-The motion and telemetry overlay are an illustrative README preview generated from the recorded simulator frame; they are not a logged evaluation run.
+Select the image to open a 7.5-second replay generated from the restored release model and 180 consecutive simulator frames. It shows the left, center, and right cameras, the exact `66 x 200` model input, and recorded versus predicted steering. This is an offline diagnostic, not a closed-loop driving benchmark.
 
 ## System At A Glance
 
@@ -81,6 +81,20 @@ self-driving-train --data-dir data --output model/model.keras --seed 42
 ```
 
 The trainer writes the model and a neighboring `.history.json` file containing the configuration and loss trace. The exploratory [notebook](notebooks/behavioral_cloning.ipynb) documents the original run; the package is the maintained execution path.
+
+### Reproduce The Offline Replay
+
+```bash
+pip install -e ".[training]"
+self-driving-artifacts --model --data
+python scripts/create_offline_replay.py \
+  --data-dir data \
+  --model model/model.h5 \
+  --output docs/media/self-driving-offline-replay.mp4 \
+  --poster docs/media/self-driving-offline-replay.webp
+```
+
+The replay runs the restored model against recorded center-camera frames and plots its predictions beside the telemetry steering values. It is useful for inspecting preprocessing and model behavior, but it cannot establish lane keeping, recovery, or track completion.
 
 ## Runtime Contract
 

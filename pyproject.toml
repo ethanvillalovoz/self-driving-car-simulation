@@ -61,6 +61,7 @@ testpaths = ["tests"]
 [tool.ruff]
 line-length = 96
 target-version = "py311"
+extend-exclude = ["notebooks/behavioral_cloning.ipynb"]
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B", "SIM", "RUF"]

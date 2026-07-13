@@ -25,7 +25,8 @@ python -m json.tool notebooks/behavioral_cloning.ipynb >/dev/null
 - Never commit downloaded datasets, simulator builds, model checkpoints, or secrets.
 - Update the model card when intended use, data assumptions, or limitations change.
 - Include exact evaluation commands and distinguish notebook observations from new results.
-- Regenerate `docs/demo-preview.webp` when its source or script changes.
+- Regenerate the offline replay and poster when the restored data, model, preprocessing,
+  or rendering script changes. Keep the caption explicit that this is not a closed-loop benchmark.
 
 ## Research Claims
 
