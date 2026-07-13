@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import argparse
-import csv
 import shutil
 import subprocess
 from collections import deque
@@ -14,7 +13,12 @@ import numpy as np
 from tensorflow import keras
 
 from behavioral_cloning.preprocessing import image_preprocess
-from behavioral_cloning.training import load_rgb
+from behavioral_cloning.replay import (
+    CAMERA_LABELS,
+    replay_camera_paths,
+    replay_model_camera_path,
+)
+from behavioral_cloning.training import load_rgb, read_driving_log
 
 WIDTH = 1200
 HEIGHT = 676
@@ -95,9 +99,7 @@ def compose_frame(
     )
     cv2.line(canvas, (28, 65), (1172, 65), LINE, 1)
 
-    for index, (label, image) in enumerate(
-        zip(("LEFT", "CENTER", "RIGHT"), camera_frames, strict=True)
-    ):
+    for index, (label, image) in enumerate(zip(CAMERA_LABELS, camera_frames, strict=True)):
         x = 28 + index * (CAMERA_WIDTH + CAMERA_GAP)
         canvas[CAMERA_TOP : CAMERA_TOP + CAMERA_HEIGHT, x : x + CAMERA_WIDTH] = fit_camera(
             image
@@ -198,9 +200,8 @@ def main() -> None:
     if args.start < 0 or args.frames <= 1 or args.fps <= 0:
         raise ValueError("Start must be non-negative and frames/fps must be positive")
     csv_path = args.data_dir / "driving_log.csv"
-    with csv_path.open(newline="", encoding="utf-8-sig") as stream:
-        rows = list(csv.reader(stream))
-    selected = rows[args.start : args.start + args.frames]
+    records = read_driving_log(csv_path, args.data_dir / "IMG")
+    selected = records[args.start : args.start + args.frames]
     if len(selected) != args.frames:
         raise ValueError("Requested replay window exceeds the available driving log")
 
@@ -244,19 +245,19 @@ def main() -> None:
     poster_frame = len(selected) // 2
 
     try:
-        for index, row in enumerate(selected, start=1):
-            camera_paths = [
-                args.data_dir / "IMG" / Path(row[column].strip()).name for column in range(3)
-            ]
-            rgb_frames = tuple(load_rgb(path) for path in camera_paths)
+        for index, record in enumerate(selected, start=1):
+            camera_paths = replay_camera_paths(record)
+            rgb_by_path = {path: load_rgb(path) for path in camera_paths}
+            rgb_frames = tuple(rgb_by_path[path] for path in camera_paths)
             bgr_frames = tuple(cv2.cvtColor(frame, cv2.COLOR_RGB2BGR) for frame in rgb_frames)
-            model_input = image_preprocess(rgb_frames[1])
+            center_frame = rgb_by_path[replay_model_camera_path(record)]
+            model_input = image_preprocess(center_frame)
             prediction = float(
                 np.asarray(
                     model.predict(np.expand_dims(model_input, axis=0), verbose=0)
                 ).reshape(-1)[0]
             )
-            recorded_trace.append(float(row[3]))
+            recorded_trace.append(record.steering)
             predicted_trace.append(prediction)
             frame = compose_frame(
                 bgr_frames,
