@@ -6,7 +6,7 @@
 
 A reproducible behavioral-cloning pipeline for the Udacity driving simulator. It trains an NVIDIA-style convolutional network on center and side camera telemetry, then serves bounded steering and throttle commands through the simulator's legacy Socket.IO protocol.
 
-https://github.com/user-attachments/assets/7b203be2-cfc8-4af3-bdff-2d3067a2f03c
+[![Self-driving car offline replay: left, center, and right camera streams with steering diagnostics](docs/media/self-driving-offline-replay.gif)](docs/media/self-driving-offline-replay.mp4)
 
 This 7.5-second replay is generated from the restored release model and 180 consecutive simulator records. It shows the cameras in left-center-right order, preprocesses the true center frame into the exact `66 x 200` model input, and compares recorded versus predicted steering. This is an offline diagnostic, not a closed-loop driving benchmark. The tracked [MP4](docs/media/self-driving-offline-replay.mp4) and [poster](docs/media/self-driving-offline-replay.webp) preserve the source capture.
 
