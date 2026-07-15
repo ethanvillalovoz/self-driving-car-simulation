@@ -4,25 +4,17 @@
 [![Python](https://img.shields.io/badge/Python-3.11%2B-222222.svg)](https://www.python.org/)
 [![License](https://img.shields.io/badge/license-MIT-222222.svg)](LICENSE)
 
-A reproducible behavioral-cloning pipeline for the Udacity driving simulator. It trains an NVIDIA-style convolutional network on center and side camera telemetry, then serves bounded steering and throttle commands through the simulator's legacy Socket.IO protocol.
+I came back to an old Udacity behavioral-cloning project and made it inspectable again. The restored path trains on center and side-camera telemetry, serves bounded controls through the legacy Socket.IO client, and can replay exactly what the model saw offline.
 
 [![Self-driving car offline replay: left, center, and right camera streams with steering diagnostics](docs/media/self-driving-offline-replay.gif)](docs/media/self-driving-offline-replay.mp4)
 
-This 7.5-second replay is generated from the restored release model and 180 consecutive simulator records. It shows the cameras in left-center-right order, preprocesses the true center frame into the exact `66 x 200` model input, and compares recorded versus predicted steering. This is an offline diagnostic, not a closed-loop driving benchmark. The tracked [MP4](docs/media/self-driving-offline-replay.mp4) and [poster](docs/media/self-driving-offline-replay.webp) preserve the source capture.
+The 7.5-second replay uses the restored release model and 180 consecutive simulator records. It keeps the cameras in left-center-right order, shows the true center frame after `66 x 200` preprocessing, and compares recorded steering with the model prediction. Treat it as an offline diagnostic, not a closed-loop driving benchmark. The tracked [MP4](docs/media/self-driving-offline-replay.mp4) and [poster](docs/media/self-driving-offline-replay.webp) preserve the source capture.
 
 ## System At A Glance
 
-```text
-driving_log.csv + camera frames
-        |
-        v
-balance steering -> expand side cameras -> deterministic split -> augment
-        |                                                        |
-        +----------------> NVIDIA-style CNN <---------------------+
-                                      |
-                                      v
-simulator frame -> crop/YUV/blur/resize -> steering -> bounded control command
-```
+[![Self-driving data flow from simulator logs and frames through training and inference to bounded control](docs/media/training-and-inference.svg)](docs/media/training-and-inference.excalidraw)
+
+The image opens the editable Excalidraw flow used for the export.
 
 | Evidence | Recorded value |
 | --- | ---: |
