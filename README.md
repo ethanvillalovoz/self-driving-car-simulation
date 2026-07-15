@@ -86,7 +86,7 @@ python scripts/create_offline_replay.py \
   --poster docs/media/self-driving-offline-replay.webp
 ```
 
-The replay runs the restored model against recorded center-camera frames and plots its predictions beside the telemetry steering values. It is useful for inspecting preprocessing and model behavior, but it cannot establish lane keeping, recovery, or track completion.
+The replay runs the restored model against recorded center-camera frames and plots its predictions beside the telemetry steering values. The generator renders a `1920 x 1080` release master by default; `--scale` can produce a different output density. It is useful for inspecting preprocessing and model behavior, but it cannot establish lane keeping, recovery, or track completion.
 
 ## Runtime Contract
 

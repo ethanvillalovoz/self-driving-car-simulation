@@ -21,7 +21,7 @@ from behavioral_cloning.replay import (
 from behavioral_cloning.training import load_rgb, read_driving_log
 
 WIDTH = 1200
-HEIGHT = 676
+HEIGHT = 675
 CAMERA_WIDTH = 368
 CAMERA_HEIGHT = 184
 CAMERA_TOP = 78
@@ -43,21 +43,26 @@ def draw_text(
     color: tuple[int, int, int] = TEXT,
     scale: float = 0.48,
     weight: int = 1,
+    render_scale: float = 1.0,
 ) -> None:
     cv2.putText(
         canvas,
         text,
-        position,
+        tuple(round(value * render_scale) for value in position),
         cv2.FONT_HERSHEY_SIMPLEX,
-        scale,
+        scale * render_scale,
         color,
-        weight,
+        max(1, round(weight * render_scale)),
         cv2.LINE_AA,
     )
 
 
-def fit_camera(image: np.ndarray) -> np.ndarray:
-    return cv2.resize(image, (CAMERA_WIDTH, CAMERA_HEIGHT), interpolation=cv2.INTER_CUBIC)
+def fit_camera(image: np.ndarray, render_scale: float) -> np.ndarray:
+    size = (
+        round(CAMERA_WIDTH * render_scale),
+        round(CAMERA_HEIGHT * render_scale),
+    )
+    return cv2.resize(image, size, interpolation=cv2.INTER_CUBIC)
 
 
 def plot_trace(
@@ -66,17 +71,25 @@ def plot_trace(
     color: tuple[int, int, int],
     origin: tuple[int, int],
     size: tuple[int, int],
+    render_scale: float,
 ) -> None:
     if len(values) < 2:
         return
-    x0, y0 = origin
-    width, height = size
+    x0, y0 = (round(value * render_scale) for value in origin)
+    width, height = (round(value * render_scale) for value in size)
     points = []
     for index, value in enumerate(values):
         x = x0 + round(index / max(1, len(values) - 1) * width)
         y = y0 + round((1.0 - (np.clip(value, -1.0, 1.0) + 1.0) / 2.0) * height)
         points.append((x, y))
-    cv2.polylines(canvas, [np.asarray(points, dtype=np.int32)], False, color, 2, cv2.LINE_AA)
+    cv2.polylines(
+        canvas,
+        [np.asarray(points, dtype=np.int32)],
+        False,
+        color,
+        max(2, round(2 * render_scale)),
+        cv2.LINE_AA,
+    )
 
 
 def compose_frame(
@@ -86,55 +99,144 @@ def compose_frame(
     predicted_trace: list[float],
     frame_number: int,
     total_frames: int,
+    render_scale: float,
 ) -> np.ndarray:
-    canvas = np.full((HEIGHT, WIDTH, 3), BACKGROUND, dtype=np.uint8)
-    draw_text(canvas, "BEHAVIORAL CLONING", (28, 32), scale=0.58, weight=2)
-    draw_text(canvas, "OFFLINE REPLAY", (28, 54), color=MUTED, scale=0.39)
+    width = round(WIDTH * render_scale)
+    height = round(HEIGHT * render_scale)
+    canvas = np.full((height, width, 3), BACKGROUND, dtype=np.uint8)
+    draw_text(
+        canvas,
+        "BEHAVIORAL CLONING",
+        (28, 32),
+        scale=0.58,
+        weight=2,
+        render_scale=render_scale,
+    )
+    draw_text(
+        canvas,
+        "OFFLINE REPLAY",
+        (28, 54),
+        color=MUTED,
+        scale=0.39,
+        render_scale=render_scale,
+    )
     draw_text(
         canvas,
         f"FRAME {frame_number:03d} / {total_frames:03d}",
         (1023, 38),
         color=MUTED,
         scale=0.38,
+        render_scale=render_scale,
     )
-    cv2.line(canvas, (28, 65), (1172, 65), LINE, 1)
+    cv2.line(
+        canvas,
+        (round(28 * render_scale), round(65 * render_scale)),
+        (round(1172 * render_scale), round(65 * render_scale)),
+        LINE,
+        max(1, round(render_scale)),
+    )
 
     for index, (label, image) in enumerate(zip(CAMERA_LABELS, camera_frames, strict=True)):
         x = 28 + index * (CAMERA_WIDTH + CAMERA_GAP)
-        canvas[CAMERA_TOP : CAMERA_TOP + CAMERA_HEIGHT, x : x + CAMERA_WIDTH] = fit_camera(
-            image
+        scaled_x = round(x * render_scale)
+        scaled_top = round(CAMERA_TOP * render_scale)
+        camera = fit_camera(image, render_scale)
+        canvas[
+            scaled_top : scaled_top + camera.shape[0],
+            scaled_x : scaled_x + camera.shape[1],
+        ] = camera
+        draw_text(
+            canvas,
+            label,
+            (x, CAMERA_TOP - 9),
+            color=MUTED,
+            scale=0.34,
+            render_scale=render_scale,
         )
-        draw_text(canvas, label, (x, CAMERA_TOP - 9), color=MUTED, scale=0.34)
 
     trace_x, trace_y = 28, 338
     trace_width, trace_height = 758, 242
-    draw_text(canvas, "STEERING TRACE", (trace_x, trace_y - 13), color=MUTED, scale=0.36)
-    canvas[trace_y : trace_y + trace_height, trace_x : trace_x + trace_width] = PANEL
+    draw_text(
+        canvas,
+        "STEERING TRACE",
+        (trace_x, trace_y - 13),
+        color=MUTED,
+        scale=0.36,
+        render_scale=render_scale,
+    )
+    trace_left = round(trace_x * render_scale)
+    trace_top = round(trace_y * render_scale)
+    scaled_trace_width = round(trace_width * render_scale)
+    scaled_trace_height = round(trace_height * render_scale)
+    canvas[
+        trace_top : trace_top + scaled_trace_height,
+        trace_left : trace_left + scaled_trace_width,
+    ] = PANEL
     for fraction in (0.0, 0.25, 0.5, 0.75, 1.0):
-        y = trace_y + round(fraction * trace_height)
-        cv2.line(canvas, (trace_x, y), (trace_x + trace_width, y), LINE, 1)
+        y = trace_top + round(fraction * scaled_trace_height)
+        cv2.line(
+            canvas,
+            (trace_left, y),
+            (trace_left + scaled_trace_width, y),
+            LINE,
+            max(1, round(render_scale)),
+        )
     cv2.line(
         canvas,
-        (trace_x, trace_y + trace_height // 2),
-        (trace_x + trace_width, trace_y + trace_height // 2),
+        (trace_left, trace_top + scaled_trace_height // 2),
+        (trace_left + scaled_trace_width, trace_top + scaled_trace_height // 2),
         (94, 88, 80),
-        1,
+        max(1, round(render_scale)),
     )
     plot_trace(
-        canvas, recorded_trace, RECORDED, (trace_x, trace_y), (trace_width, trace_height)
+        canvas,
+        recorded_trace,
+        RECORDED,
+        (trace_x, trace_y),
+        (trace_width, trace_height),
+        render_scale,
     )
     plot_trace(
-        canvas, predicted_trace, PREDICTED, (trace_x, trace_y), (trace_width, trace_height)
+        canvas,
+        predicted_trace,
+        PREDICTED,
+        (trace_x, trace_y),
+        (trace_width, trace_height),
+        render_scale,
     )
-    draw_text(canvas, "RECORDED", (trace_x, 608), color=RECORDED, scale=0.34, weight=2)
-    draw_text(canvas, "MODEL", (trace_x + 100, 608), color=PREDICTED, scale=0.34, weight=2)
-    draw_text(canvas, "+1.0", (trace_x + trace_width + 7, trace_y + 7), color=MUTED, scale=0.31)
+    draw_text(
+        canvas,
+        "RECORDED",
+        (trace_x, 608),
+        color=RECORDED,
+        scale=0.34,
+        weight=2,
+        render_scale=render_scale,
+    )
+    draw_text(
+        canvas,
+        "MODEL",
+        (trace_x + 100, 608),
+        color=PREDICTED,
+        scale=0.34,
+        weight=2,
+        render_scale=render_scale,
+    )
+    draw_text(
+        canvas,
+        "+1.0",
+        (trace_x + trace_width + 7, trace_y + 7),
+        color=MUTED,
+        scale=0.31,
+        render_scale=render_scale,
+    )
     draw_text(
         canvas,
         " 0.0",
         (trace_x + trace_width + 7, trace_y + trace_height // 2 + 4),
         color=MUTED,
         scale=0.31,
+        render_scale=render_scale,
     )
     draw_text(
         canvas,
@@ -142,25 +244,64 @@ def compose_frame(
         (trace_x + trace_width + 7, trace_y + trace_height),
         color=MUTED,
         scale=0.31,
+        render_scale=render_scale,
     )
 
     detail_x = 846
-    draw_text(canvas, "MODEL INPUT", (detail_x, trace_y - 13), color=MUTED, scale=0.36)
+    draw_text(
+        canvas,
+        "MODEL INPUT",
+        (detail_x, trace_y - 13),
+        color=MUTED,
+        scale=0.36,
+        render_scale=render_scale,
+    )
     preview = cv2.cvtColor(
         np.clip(model_input * 255.0, 0, 255).astype(np.uint8),
         cv2.COLOR_YUV2BGR,
     )
-    preview = cv2.resize(preview, (326, 108), interpolation=cv2.INTER_NEAREST)
-    canvas[trace_y : trace_y + 108, detail_x : detail_x + 326] = preview
-    cv2.rectangle(canvas, (detail_x, trace_y), (detail_x + 326, trace_y + 108), LINE, 1)
+    preview_size = (round(326 * render_scale), round(108 * render_scale))
+    preview = cv2.resize(preview, preview_size, interpolation=cv2.INTER_NEAREST)
+    detail_left = round(detail_x * render_scale)
+    canvas[
+        trace_top : trace_top + preview.shape[0],
+        detail_left : detail_left + preview.shape[1],
+    ] = preview
+    cv2.rectangle(
+        canvas,
+        (detail_left, trace_top),
+        (detail_left + preview.shape[1], trace_top + preview.shape[0]),
+        LINE,
+        max(1, round(render_scale)),
+    )
 
     latest_recorded = recorded_trace[-1]
     latest_predicted = predicted_trace[-1]
-    draw_text(canvas, "RECORDED STEERING", (detail_x, 481), color=MUTED, scale=0.34)
     draw_text(
-        canvas, f"{latest_recorded:+.4f}", (detail_x, 511), color=RECORDED, scale=0.74, weight=2
+        canvas,
+        "RECORDED STEERING",
+        (detail_x, 481),
+        color=MUTED,
+        scale=0.34,
+        render_scale=render_scale,
     )
-    draw_text(canvas, "MODEL STEERING", (detail_x, 548), color=MUTED, scale=0.34)
+    draw_text(
+        canvas,
+        f"{latest_recorded:+.4f}",
+        (detail_x, 511),
+        color=RECORDED,
+        scale=0.74,
+        weight=2,
+        render_scale=render_scale,
+    )
+    draw_text(
+        canvas,
+        "MODEL STEERING",
+        (detail_x, 548),
+        color=MUTED,
+        scale=0.34,
+        render_scale=render_scale,
+    )
     draw_text(
         canvas,
         f"{latest_predicted:+.4f}",
@@ -168,6 +309,7 @@ def compose_frame(
         color=PREDICTED,
         scale=0.74,
         weight=2,
+        render_scale=render_scale,
     )
     draw_text(
         canvas,
@@ -175,6 +317,7 @@ def compose_frame(
         (detail_x, 612),
         color=MUTED,
         scale=0.32,
+        render_scale=render_scale,
     )
     draw_text(
         canvas,
@@ -182,6 +325,7 @@ def compose_frame(
         (28, 652),
         color=MUTED,
         scale=0.34,
+        render_scale=render_scale,
     )
     return canvas
 
@@ -195,9 +339,10 @@ def main() -> None:
     parser.add_argument("--start", type=int, default=6414)
     parser.add_argument("--frames", type=int, default=180)
     parser.add_argument("--fps", type=int, default=24)
+    parser.add_argument("--scale", type=float, default=1.6)
     args = parser.parse_args()
 
-    if args.start < 0 or args.frames <= 1 or args.fps <= 0:
+    if args.start < 0 or args.frames <= 1 or args.fps <= 0 or args.scale <= 0:
         raise ValueError("Start must be non-negative and frames/fps must be positive")
     csv_path = args.data_dir / "driving_log.csv"
     records = read_driving_log(csv_path, args.data_dir / "IMG")
@@ -221,7 +366,7 @@ def main() -> None:
         "-pix_fmt",
         "bgr24",
         "-s",
-        f"{WIDTH}x{HEIGHT}",
+        f"{round(WIDTH * args.scale)}x{round(HEIGHT * args.scale)}",
         "-r",
         str(args.fps),
         "-i",
@@ -266,6 +411,7 @@ def main() -> None:
                 list(predicted_trace),
                 index,
                 len(selected),
+                args.scale,
             )
             if encoder.stdin is None:
                 raise RuntimeError("ffmpeg input stream is unavailable")
