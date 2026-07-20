@@ -35,6 +35,18 @@ Those values came from the original notebook environment and stochastic generato
 
 The same values are committed as machine-readable JSON in [`examples/original-run-metrics.json`](../examples/original-run-metrics.json).
 
+## Public Figure
+
+The README overview is generated from the committed replay poster, simulator frame, historical
+metrics JSON, and maintained implementation paths:
+
+```bash
+python scripts/render_public_figures.py
+```
+
+The command rewrites `behavioral-cloning-overview.{svg,pdf,png}` in `docs/media/`. Its figure
+contract and input/output hashes are stored in `docs/figures/behavioral-cloning-overview/`.
+
 ## Stronger Evaluation Protocol
 
 For a future closed-loop claim, record:

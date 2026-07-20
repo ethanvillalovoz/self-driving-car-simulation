@@ -1,0 +1,82 @@
+{
+  "claim": "The repository separates deterministic training preparation, shared image-to-steering inference, bounded simulator control, and offline replay evidence.",
+  "figure_id": "behavioral-cloning-overview",
+  "inputs": [
+    {
+      "bytes": 551,
+      "path": "examples/original-run-metrics.json",
+      "role": "metrics",
+      "sha256": "37b48441d5b4cb3a2965248246bb530ce9aa2a7a05aa003418a47030ce0a6800"
+    },
+    {
+      "bytes": 144070,
+      "path": "docs/media/self-driving-offline-replay.webp",
+      "role": "replay_poster",
+      "sha256": "0a2f6c33af2f2f6a1a8c2d37d9762e8c858df6e79dd424c579ec36d62a59edab"
+    },
+    {
+      "bytes": 479388,
+      "path": "docs/simulator-frame.webp",
+      "role": "simulator_frame",
+      "sha256": "74f19cdff4df3774ddb03e3153d3cb5b0a22b430b5a9508b74bfe0f19038fac2"
+    },
+    {
+      "bytes": 2646,
+      "path": "src/behavioral_cloning/preprocessing.py",
+      "role": "preprocessing",
+      "sha256": "78bc85f43b469c1252a20b2c4344809738edf076df5565acb0cfc24a412acaec"
+    },
+    {
+      "bytes": 9141,
+      "path": "src/behavioral_cloning/training.py",
+      "role": "training",
+      "sha256": "b1e19410c101df37db075c6e042a8ba0303dd1eb6101c6c71e5a154a7e6bca97"
+    },
+    {
+      "bytes": 3035,
+      "path": "src/behavioral_cloning/control.py",
+      "role": "control",
+      "sha256": "94733f45e47f1b96bddaf9c23eead13249f7f635d84f794add3724289f55fa52"
+    },
+    {
+      "bytes": 12340,
+      "path": "scripts/create_offline_replay.py",
+      "role": "replay_renderer",
+      "sha256": "c7f88f144b46300874ca38da61fa6d4b12f6c9c2fe7ff59993f0a1a281856179"
+    },
+    {
+      "bytes": 15029,
+      "path": "src/behavioral_cloning/visualization.py",
+      "role": "figure_renderer",
+      "sha256": "8d225a5c62daaf2c859b627f601d76da356f1924c9fe52627dc7f57d7585be50"
+    }
+  ],
+  "outputs": [
+    {
+      "bytes": 1521338,
+      "path": "docs/media/behavioral-cloning-overview.svg",
+      "role": "svg",
+      "sha256": "e8665246dc3bf42a2d74c234dc608767d08c20e5fd5d909f02f47ebba8f96775"
+    },
+    {
+      "bytes": 1069224,
+      "path": "docs/media/behavioral-cloning-overview.pdf",
+      "role": "pdf",
+      "sha256": "45ab6e5e5355dc99e19fb05019d3ab665cdf6aab085b2218d51764bd54195a05"
+    },
+    {
+      "bytes": 1274034,
+      "path": "docs/media/behavioral-cloning-overview.png",
+      "role": "png",
+      "sha256": "526da6cd091046ebc4cca2ce20eadaadc567d2d140380596159e1296db8674c8"
+    }
+  ],
+  "processing_notes": [
+    "Raster evidence is cropped only at the coordinates recorded in contract.md; vector labels and diagram elements are generated in Matplotlib.",
+    "Historical metrics are read directly from original-run-metrics.json; no learning curve or closed-loop result is inferred."
+  ],
+  "schema_version": 1,
+  "selection_note": "Uses fixed pixel crops from the already committed replay poster and simulator frame; no video search or outcome-based frame selection.",
+  "target_width_in": 7.16,
+  "venue": null
+}

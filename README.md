@@ -12,9 +12,15 @@ The 7.5-second replay uses the restored release model and 180 consecutive simula
 
 ## System At A Glance
 
-[![Self-driving data flow from simulator logs and frames through training and inference to bounded control](docs/media/training-and-inference.svg)](docs/media/training-and-inference.excalidraw)
+[![Behavioral-cloning overview showing training data preparation, shared preprocessing and CNN inference, bounded simulator control, offline replay, and the historical run record](docs/media/behavioral-cloning-overview.svg)](docs/media/behavioral-cloning-overview.pdf)
 
-The image opens the editable Excalidraw flow used for the export.
+The overview separates the maintained training and runtime paths from the evidence that is
+actually preserved. Its camera, model-input, steering-trace, and simulator panels come from
+committed project media; its numerical record comes from the original notebook extraction.
+The replay remains an offline diagnostic rather than a closed-loop result. [Vector
+PDF](docs/media/behavioral-cloning-overview.pdf) · [figure contract and
+provenance](docs/figures/behavioral-cloning-overview/) · [legacy editable
+flow](docs/media/training-and-inference.excalidraw)
 
 | Evidence | Recorded value |
 | --- | ---: |
@@ -88,6 +94,13 @@ python scripts/create_offline_replay.py \
 
 The replay runs the restored model against recorded center-camera frames and plots its predictions beside the telemetry steering values. The generator renders a `1920 x 1080` release master by default; `--scale` can produce a different output density. It is useful for inspecting preprocessing and model behavior, but it cannot establish lane keeping, recovery, or track completion.
 
+Regenerate the committed publication-width overview from the frozen repository media and
+metrics:
+
+```bash
+python scripts/render_public_figures.py
+```
+
 ## Runtime Contract
 
 For each telemetry event, the server:
@@ -109,10 +122,12 @@ src/behavioral_cloning/
   control.py         typed, bounded control prediction
   server.py          legacy-compatible Socket.IO adapter
   training.py        deterministic data preparation and model training
+  visualization.py   publication-width training, runtime, and evidence overview
   cli.py             simulator server command
 notebooks/           original exploratory training record
 tests/               core regression and safety checks
 docs/                model card, reproducibility notes, and visuals
+scripts/             offline replay and public-figure regeneration
 ```
 
 ## Artifacts
