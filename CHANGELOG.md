@@ -9,6 +9,8 @@
 - Bounded telemetry decoding and control validation.
 - Checksum-verified, link-safe release artifact restoration.
 - Model card, reproducibility guide, expanded tests, and linted CI.
+- Evidence-backed behavioral-cloning overview with SVG, PDF, and 300 dpi PNG exports.
+- Figure contract, provenance manifest, deterministic renderer, and crop-contract tests.
 
 ### Changed
 

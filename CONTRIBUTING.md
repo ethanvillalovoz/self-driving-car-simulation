@@ -19,6 +19,7 @@ ruff check src tests scripts drive.py
 ruff format --check src tests scripts drive.py
 pytest -q
 python -m json.tool notebooks/behavioral_cloning.ipynb >/dev/null
+python scripts/render_public_figures.py
 ```
 
 - Add tests for changed preprocessing, telemetry, control, data, or extraction behavior.
@@ -27,6 +28,8 @@ python -m json.tool notebooks/behavioral_cloning.ipynb >/dev/null
 - Include exact evaluation commands and distinguish notebook observations from new results.
 - Regenerate the offline replay and poster when the restored data, model, preprocessing,
   or rendering script changes. Keep the caption explicit that this is not a closed-loop benchmark.
+- Regenerate the public overview and update its provenance manifest when its inputs or renderer
+  change. Inspect the SVG/PDF at final width before committing it.
 
 ## Research Claims
 

@@ -43,3 +43,7 @@ jobs:
           self-driving-train --help
           python -m json.tool notebooks/behavioral_cloning.ipynb >/dev/null
           python -m json.tool examples/original-run-metrics.json >/dev/null
+          python -m json.tool docs/figures/behavioral-cloning-overview/manifest.json >/dev/null
+          test -s docs/media/behavioral-cloning-overview.svg
+          test -s docs/media/behavioral-cloning-overview.pdf
+          test -s docs/media/behavioral-cloning-overview.png
